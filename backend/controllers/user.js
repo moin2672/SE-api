@@ -47,7 +47,7 @@ exports.userLogin = (req, res, next) => {
             }
             const token=jwt.sign(
                 {email:fetchedUser.email, userId: fetchedUser._id}, 
-                'secret_this_should_be_longer',
+                process.env.JWT_KEY,
                 {expiresIn:'1h'}
             );
             res.status(200).json({
@@ -73,7 +73,7 @@ exports.getUsers =(req, res, next)=>{
             for(let i=0;i<fetchedUsers.length;i++){
                 fetchedUsers[i].email=(fetchedUsers[i].email).substring(0,(fetchedUsers[i].email).search("@"))
             }
-            return User.count();
+            return User.countDocuments();
         })
         .then(count=>{
             res.status(200).json({

@@ -10,7 +10,8 @@ const listItemSchema = mongoose.Schema({
   quantity_copy:Number,
   cpCost:Number,
   spCost:Number,
-  profit:Number
+  profit:Number,
+  itemHSN:String
   })
 
 const orderSchema =  mongoose.Schema({

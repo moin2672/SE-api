@@ -5,6 +5,7 @@ const itemSchema =  mongoose.Schema({
     itemSellingPrice: {type:Number, required:true},
     itemCostPrice: {type:Number},
     itemQuantity: {type:Number},
+    itemHSN:{type:String},
     creator:{type:mongoose.Schema.Types.ObjectId, ref:"User", required:true}
 });
 

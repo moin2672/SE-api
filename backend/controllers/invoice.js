@@ -1,6 +1,8 @@
 const Invoice = require('../models/invoice');
 
 exports.getInvoices = (req, res, next)=>{
+    console.log("generateInvoiceNo()")
+    console.log(generateInvoiceNo())
     const pageSize=+req.query.pagesize;
     const currentPage= +req.query.currentpage;
     const invoiceQuery=Invoice.find();
@@ -13,7 +15,7 @@ exports.getInvoices = (req, res, next)=>{
     invoiceQuery
         .then(invoiceBills=>{
             fetchedInvoices=invoiceBills;
-            return Invoice.count();
+            return Invoice.countDocuments();
         })
         .then(count=>{
             res.status(200).json({
@@ -28,6 +30,20 @@ exports.getInvoices = (req, res, next)=>{
         });
 }
 
+isNumeric=(num)=> {
+    return !isNaN(num);
+  }
+  padLeft=(nr, n, str)=> {
+    return Array(n - String(nr).length + 1).join(str || "0") + nr;
+  }
+
+  generateInvoiceNo=()=>{
+
+    
+        
+    
+
+  }
 exports.generateInvoiceId = (req, res, next)=>{
     
     let fetchedInvoices;
@@ -38,7 +54,7 @@ exports.generateInvoiceId = (req, res, next)=>{
     Invoice.find()
         .then(invoice=>{
             fetchedInvoices=invoice;
-            return Invoice.count();
+            return Invoice.countDocuments();
         })
         .then(count=>{
             if(fetchedInvoices[count-1]){
@@ -74,32 +90,72 @@ exports.getInvoice = (req, res, next)=>{
 }
 
 exports.createInvoice = (req, res, next) =>{
-    const invoice=new Invoice({
-    invoiceNo:req.body.invoiceNo,
-    orderId:req.body.orderId ,
-    orderBillNo:req.body.orderBillNo ,
-    HSNcode: req.body.HSNcode ,
-    SGST: req.body.SGST ,
-    CGST: req.body.CGST ,
-    IGST: req.body.IGST ,
-    eWayBillNo:req.body.eWayBillNo ,
-    vehicleNo:req.body.vehicleNo ,
-    transporterName:req.body.transporterName ,
-    lastUpdatedDate:req.body.lastUpdatedDate,
-    creator:req.userData.userId
-    });
-    console.log(invoice);
-    invoice.save()
-        .then(createdInvoice=>{
-            res.status(201).json({
-                message:"Invoice added successfully!",
-                invoiceId: createdInvoice._id
+    let fetchedInvoices;
+    let lastInvoice;
+    Invoice.find()
+        .then(invoice=>{
+            fetchedInvoices=invoice;
+            return Invoice.countDocuments();
+        })
+        .then(count=>{
+            if(fetchedInvoices[count-1]){
+                lastInvoice=fetchedInvoices[count-1]
+            }else{
+                lastInvoice={invoiceNo:"0"}
+            }
+           
+            let lastInvoiceNo=lastInvoice.invoiceNo;
+            let maxInvoiceCount = count;
+    let lastBillNo_num = 0;
+    let gen_InvoiceNo_Val="";
+    if(lastInvoiceNo!="" && isNumeric(lastInvoiceNo)){
+        lastBillNo_num=Number(lastInvoiceNo)
+    }
+    
+    if (lastBillNo_num >= maxInvoiceCount) {
+          gen_InvoiceNo_Val =
+            padLeft(lastBillNo_num + 1, 5, "0");
+          //console.log("last bill no");
+        } else {
+          gen_InvoiceNo_Val =
+            padLeft(maxInvoiceCount + 1, 5, "0");
+          //console.log("max invoice");
+        }
+        // console.log("gen_InvoiceNo_Val");
+        // console.log(gen_InvoiceNo_Val);
+        const invoice=new Invoice({
+            invoiceNo:gen_InvoiceNo_Val,
+            orderId:req.body.orderId ,
+            orderBillNo:req.body.orderBillNo ,
+            HSNcode: req.body.HSNcode ,
+            SGST: req.body.SGST ,
+            CGST: req.body.CGST ,
+            IGST: req.body.IGST ,
+            eWayBillNo:req.body.eWayBillNo ,
+            vehicleNo:req.body.vehicleNo ,
+            transporterName:req.body.transporterName ,
+            lastUpdatedDate:req.body.lastUpdatedDate,
+            creator:req.userData.userId
             });
+            console.log(invoice);
+            invoice.save()
+                .then(createdInvoice=>{
+                    res.status(201).json({
+                        message:"Invoice added successfully!",
+                        invoiceId: createdInvoice._id
+                    });
+                })
+                .catch((error)=>{
+                    // console.log("Invoice NOT saved")
+                    res.status(500).json({message:'Failed to add Invoice!'})
+                });
         })
         .catch((error)=>{
-            // console.log("Invoice NOT saved")
-            res.status(500).json({message:'Failed to add Invoice!'})
+            console.log(error)
+            //res.status(500).json({message:'Failed to get invoice GenID!'})
         });
+
+    
 }
 
 exports.updateInvoice = (req, res, next)=>{

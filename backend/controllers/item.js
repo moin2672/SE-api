@@ -15,7 +15,7 @@ exports.getItems =(req, res, next)=>{
     itemQuery
         .then(products=>{
             fetchedItems=products;
-            return Item.count();
+            return Item.countDocuments();
         })
         .then(count=>{
             res.status(200).json({
@@ -130,6 +130,7 @@ exports.createItem = (req, res, next) =>{
         itemSellingPrice: +req.body.itemSellingPrice,
         itemCostPrice: +req.body.itemCostPrice,
         itemQuantity: +req.body.itemQuantity,
+        itemHSN:req.body.itemHSN,
         creator:req.userData.userId
     });
     console.log(item);
@@ -161,6 +162,7 @@ exports.updateItem =(req, res, next)=>{
                     itemSellingPrice: +req.body.itemSellingPrice,
                     itemCostPrice: +req.body.itemCostPrice,
                     itemQuantity: +req.body.itemQuantity,
+                    itemHSN:req.body.itemHSN,
                     creator:itemDoc.creator
                 })
                 console.log("creating item")

@@ -4,6 +4,7 @@ var ordersCount=0;
 
 
 exports.getOrders = (req, res, next)=>{
+    
     const pageSize=+req.query.pagesize;
     const currentPage= +req.query.currentpage;
     const orderQuery=Order.find().sort({lastUpdatedDate:-1});
@@ -16,7 +17,7 @@ exports.getOrders = (req, res, next)=>{
     orderQuery
         .then(orders=>{
             fetchedOrders=orders;
-            return Order.count();
+            return Order.countDocuments();
         })
         .then(count=>{
             res.status(200).json({
@@ -113,6 +114,13 @@ console.log(searchText)
     
 }
 
+isNumeric=(num)=> {
+    return !isNaN(num);
+  }
+  padLeft=(nr, n, str)=> {
+    return Array(n - String(nr).length + 1).join(str || "0") + nr;
+  }
+
 exports.generateOrderId = (req, res, next)=>{
     
     let fetchedOrders;
@@ -123,7 +131,7 @@ exports.generateOrderId = (req, res, next)=>{
     Order.find()
         .then(orders=>{
             fetchedOrders=orders;
-            return Order.count();
+            return Order.countDocuments();
         })
         .then(count=>{
             if(fetchedOrders[count-1]){
@@ -175,7 +183,8 @@ exports.createOrder = (req, res, next) =>{
         orderDataArray[i].cpCost=req.body.listOfItems[i].cpCost
         orderDataArray[i].spCost=req.body.listOfItems[i].spCost
         orderDataArray[i].profit=req.body.listOfItems[i].profit
-       
+        orderDataArray[i].itemHSN=req.body.listOfItems[i].itemHSN
+        
     }
 
     console.log(orderDataArray);
@@ -191,39 +200,86 @@ exports.createOrder = (req, res, next) =>{
         
 
     */
-    const order=new Order({
-        billNo:req.body.billNo,
-        clientName: req.body.clientName,
-        clientPhoneNo: req.body.clientPhoneNo,
-        clientAddress: req.body.clientAddress,
-        clientGSTIN:req.body.clientGSTIN,
-        isInvoiceCreated:req.body.isInvoiceCreated,
-        relatedInvoiceId:req.body.relatedInvoiceId,
-        amountPaid: req.body.amountPaid,
-        totalCost: req.body.totalCost,
-        totalProfit: req.body.totalProfit,
-        paymentType:req.body.paymentType,
-        lastUpdatedDate: req.body.lastUpdatedDate,
-        purchasedDate: req.body.purchasedDate,
-        businessType:req.body.businessType,
-        businessType_copy:req.body.businessType_copy,
-        transaction: req.body.transaction,
-        listOfItems: orderDataArray,
-        creator:req.userData.userId
-    });
-    console.log(order);
-    order.save()
-        .then(createdItem=>{
-            res.status(201).json({
-                message:"Order added successfully!",
-                orderId: createdItem._id
+   let fetchedOrders;
+    let lastOrder;
+    let genBillNoVal="";
+    console.log(Order.find())
+    Order.find()
+        .then(orders=>{
+            fetchedOrders=orders;
+            return Order.countDocuments();
+        })
+        .then(count=>{
+            if(fetchedOrders[count-1]){
+                lastOrder=fetchedOrders[count-1]
+            }else{
+                lastOrder={billNo:"0"}
+            }
+            
+                let lastOrderBillNo=lastOrder.billNo;
+                let maxOrderCount=count;
+                let lastBillNo_num = 0;
+            let billNoAr = lastOrderBillNo.split("-");
+            for (let i = 0; i < billNoAr.length; i++) {
+                if (isNumeric(billNoAr[i].trim())) {
+                  //console.log(billNoAr[i]);
+                  lastBillNo_num = Number(billNoAr[i].trim());
+                  //console.log(lastBillNo_num);
+                  //if(lastBillNo_num!=0){
+                  if (lastBillNo_num >= maxOrderCount) {
+                    genBillNoVal =
+                      "SE-" + padLeft(lastBillNo_num + 1, 5, "0");
+                    console.log("last bill no");
+                  } else {
+                    genBillNoVal =
+                      "SE-" + padLeft(maxOrderCount + 1, 5, "0");
+                    console.log("max order");
+                  }
+                  console.log(genBillNoVal);
+                  //}
+                }
+              }
+              console.log(genBillNoVal);
+              const order=new Order({
+                billNo:genBillNoVal,
+                clientName: req.body.clientName,
+                clientPhoneNo: req.body.clientPhoneNo,
+                clientAddress: req.body.clientAddress,
+                clientGSTIN:req.body.clientGSTIN,
+                isInvoiceCreated:req.body.isInvoiceCreated,
+                relatedInvoiceId:req.body.relatedInvoiceId,
+                amountPaid: req.body.amountPaid,
+                totalCost: req.body.totalCost,
+                totalProfit: req.body.totalProfit,
+                paymentType:req.body.paymentType,
+                lastUpdatedDate: req.body.lastUpdatedDate,
+                purchasedDate: req.body.purchasedDate,
+                businessType:req.body.businessType,
+                businessType_copy:req.body.businessType_copy,
+                transaction: req.body.transaction,
+                listOfItems: orderDataArray,
+                creator:req.userData.userId
             });
+            console.log(order);
+            order.save()
+                .then(createdItem=>{
+                    res.status(201).json({
+                        message:"Order added successfully!",
+                        orderId: createdItem._id
+                    });
+                })
+                .catch((error)=>{
+                    console.log(error)
+                    // console.log("Order NOT saved")
+                    res.status(500).json({message:'Failed to add Orders!'})
+                });
         })
         .catch((error)=>{
-            console.log(error)
-            // console.log("Order NOT saved")
-            res.status(500).json({message:'Failed to add Orders!'})
+            // console.log("Unable to get orders")
+            res.status(500).json({message:'Failed to fetch Order GenID!'})
         });
+
+    
 }
 
 exports.updateOrder = (req, res, next)=>{
@@ -242,6 +298,7 @@ exports.updateOrder = (req, res, next)=>{
         orderDataArray[i].cpCost=req.body.listOfItems[i].cpCost
         orderDataArray[i].spCost=req.body.listOfItems[i].spCost
         orderDataArray[i].profit=req.body.listOfItems[i].profit
+        orderDataArray[i].itemHSN=req.body.listOfItems[i].itemHSN
     }
 
     const order = new Order({

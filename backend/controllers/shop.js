@@ -13,7 +13,7 @@ exports.getShops = (req, res, next)=>{
     shopQuery
         .then(shopData=>{
             fetchedShops=shopData;
-            return Shop.count();
+            return Shop.countDocuments();
         })
         .then(count=>{
             res.status(200).json({

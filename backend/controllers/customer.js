@@ -15,7 +15,7 @@ exports.getCustomers = (req, res, next)=>{
     customerQuery
         .then(customerData=>{
             fetchedCustomers=customerData;
-            return Customer.count();
+            return Customer.countDocuments();
         })
         .then(count=>{
             res.status(200).json({
@@ -129,7 +129,7 @@ exports.getPhoneNo =(req, res, next)=>{
     customerQuery
         .then(customerPhoneNoData=>{
             fetchedCustomers=customerPhoneNoData;
-            return Customer.count();
+            return Customer.countDocuments();
         })
         .then(count=>{
             res.status(200).json({
