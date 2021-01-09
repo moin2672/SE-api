@@ -11,7 +11,7 @@ const userRoutes = require("./routes/users");
 
 const app = express();
 
-mogoose.connect("mongodb+srv://superelectronicsproject:"+process.env.MONGO_ALTAS_PW+"@cluster0.s9lwv.mongodb.net/superelectronicsproject", { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex:true })
+mogoose.connect("mongodb+srv://meanapp:"+process.env.MONGO_ALTAS_PW+"@cluster0.fgaaw.mongodb.net/superelectronicsproject", { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex:true })
         .then(()=>{console.log("Connected to Database")})
         .catch(()=>{console.log("Db connection failed!")});
 
